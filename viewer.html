@@ -143,6 +143,7 @@
     "polynomials": {
       title: "Polynomials",
       folder: "Polynomials/pages",
+      complete: false,
       chapters: [
         { label: "Chapter 1", startPage: 2 },
         { label: "Chapter 2", startPage: 13 },
@@ -151,6 +152,7 @@
     "the-assigned": {
       title: "The Assigned",
       folder: "Assigned/pages",
+      complete: false,
       chapters: [
         { label: "Chapter 1", startPage: 1 },
       ],
@@ -158,16 +160,21 @@
     "art-of-love-and-destruction": {
       title: "The Art of Love and Destruction",
       folder: "art-of-love/pages",
+      complete: true,
       chapters: [
         { label: "Chapter 1", startPage: 1 },
       ],
     },
-     "fallen": {
-       title: "Fallen",
-       folder: "fallen/pages",
-       chapters: [
-        { label: "Chapter 1", startPage: 3 },
-      ],
+"fallen": {
+  title: "Fallen",
+  folder: "fallen/pages",
+  complete: true,
+  chapters: [
+    { label: "Chapter 1", startPage: 2 },
+    { label: "Chapter 2", startPage: 10 },
+    { label: "Chapter 3", startPage: 19 },
+    { label: "Chapter 4", startPage: 28 },
+  ],
 },
   };
 
@@ -219,10 +226,14 @@
         main.appendChild(img);
       });
 
-      const lastChapterLabel = book.chapters.length
-        ? book.chapters[book.chapters.length - 1].label
-        : "";
-      endLabel.textContent = lastChapterLabel ? `End of ${lastChapterLabel}` : "End";
+      if (book.complete) {
+        endLabel.textContent = "The End";
+      } else {
+        const lastChapterLabel = book.chapters.length
+          ? book.chapters[book.chapters.length - 1].label
+          : "";
+        endLabel.textContent = lastChapterLabel ? `End of ${lastChapterLabel}` : "End";
+      }
       endMarker.style.display = "block";
 
       setupChapterDropdown(book);
