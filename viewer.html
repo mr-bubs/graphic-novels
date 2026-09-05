@@ -27,7 +27,7 @@
     z-index: 10;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 10px;
     padding: 14px 18px;
     background: rgba(12, 12, 16, 0.85);
     backdrop-filter: blur(8px);
@@ -46,6 +46,8 @@
     display: flex;
     align-items: center;
     overflow: hidden;
+    flex: 1;
+    min-width: 0;
   }
 
   header .title {
@@ -57,6 +59,29 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .credit-link {
+    flex-shrink: 0;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--paper);
+    opacity: 0.55;
+    text-decoration: none;
+    white-space: nowrap;
+    border: 1px solid rgba(244, 242, 237, 0.25);
+    border-radius: 5px;
+    padding: 5px 9px;
+  }
+
+  .credit-link:hover, .credit-link:focus-visible {
+    opacity: 0.9;
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   header .chapter-select {
@@ -119,6 +144,7 @@
     <a class="back" href="./" title="All webtoons">&larr;</a>
     <span class="title" id="book-title">Loading…</span>
   </div>
+  <a class="credit-link" id="credit-link" href="#" target="_blank" rel="noopener">Source ↗</a>
   <select class="chapter-select" id="chapter-select">
     <option value="" disabled selected>Chapter</option>
   </select>
@@ -139,6 +165,7 @@
 
   // ⬇️ Add a new entry here whenever you start a new webtoon.
   // key = the value used in the URL, e.g. viewer.html?book=polynomials
+  // credit (optional) = { text, url } — shows a "Source" link in the header for adapted works.
   const BOOKS = {
     "polynomials": {
       title: "Polynomials",
@@ -161,21 +188,29 @@
       title: "The Art of Love and Destruction",
       folder: "art-of-love/pages",
       complete: true,
+      credit: {
+        text: "Adapted from \"The Art of Destruction\" by dilldiva",
+        url: "https://archiveofourown.org/works/68964101",
+      },
       chapters: [
         { label: "Chapter 1", startPage: 1 },
       ],
     },
-"fallen": {
-  title: "Fallen",
-  folder: "fallen/pages",
-  complete: true,
-  chapters: [
-    { label: "Chapter 1", startPage: 2 },
-    { label: "Chapter 2", startPage: 10 },
-    { label: "Chapter 3", startPage: 19 },
-    { label: "Chapter 4", startPage: 28 },
-  ],
-},
+    "fallen": {
+      title: "Fallen",
+      folder: "fallen/pages",
+      complete: true,
+      credit: {
+        text: "Adapted from \"Angel of Death\" by levitating_marshmallow7",
+        url: "https://archiveofourown.org/works/85885511",
+      },
+      chapters: [
+        { label: "Chapter 1", startPage: 2 },
+        { label: "Chapter 2", startPage: 10 },
+        { label: "Chapter 3", startPage: 19 },
+        { label: "Chapter 4", startPage: 28 },
+      ],
+    },
   };
 
   function getBookKey() {
@@ -200,6 +235,14 @@
 
     titleEl.textContent = book.title;
     document.title = book.title;
+
+    if (book.credit) {
+      const creditLink = document.getElementById("credit-link");
+      creditLink.href = book.credit.url;
+      creditLink.title = book.credit.text;
+      creditLink.setAttribute("aria-label", book.credit.text);
+      creditLink.style.display = "inline-flex";
+    }
 
     try {
       const res = await fetch(
