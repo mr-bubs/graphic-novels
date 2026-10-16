@@ -102,6 +102,20 @@
     padding: 14px 12px;
   }
 
+  .book-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--accent);
+    color: var(--ink);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 4px;
+  }
+
   .book-title {
     font-size: 15px;
     font-weight: 700;
@@ -113,6 +127,13 @@
     font-size: 11px;
     color: var(--dim);
     letter-spacing: 0.02em;
+  }
+
+  .book-updated {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 0.02em;
+    margin-top: 2px;
   }
 
   @media (max-width: 380px) {
@@ -144,20 +165,65 @@
     { key: "remnants-of-theia", title: "Remnants of Theia", folder: "remnants/pages", meta: "Chapter 1, ongoing" },
   ];
 
+  function timeAgo(date) {
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    const units = [
+      ["year", 31536000], ["month", 2592000], ["week", 604800],
+      ["day", 86400], ["hour", 3600], ["minute", 60],
+    ];
+    for (const [name, secs] of units) {
+      const val = Math.floor(seconds / secs);
+      if (val >= 1) return `${val} ${name}${val > 1 ? "s" : ""} ago`;
+    }
+    return "just now";
+  }
+
+  async function fetchLastUpdated(folder) {
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/commits?path=${encodeURIComponent(folder)}&per_page=1`
+      );
+      if (!res.ok) return null;
+      const commits = await res.json();
+      if (!Array.isArray(commits) || commits.length === 0) return null;
+      const dateStr = commits[0]?.commit?.committer?.date;
+      return dateStr ? new Date(dateStr) : null;
+    } catch (err) {
+      console.error("Could not fetch last-updated for", folder, err);
+      return null;
+    }
+  }
+
   async function loadCovers() {
     const grid = document.getElementById("grid");
 
-    BOOKS.forEach(book => {
+    // Fetch last-updated dates for every book first, then sort newest -> oldest.
+    // Books whose date couldn't be fetched sink to the bottom rather than
+    // breaking the sort.
+    await Promise.all(BOOKS.map(async book => {
+      book.updatedAt = await fetchLastUpdated(book.folder);
+    }));
+
+    BOOKS.sort((a, b) => {
+      if (a.updatedAt && b.updatedAt) return b.updatedAt - a.updatedAt;
+      if (a.updatedAt) return -1;
+      if (b.updatedAt) return 1;
+      return 0;
+    });
+
+    BOOKS.forEach((book, i) => {
       const a = document.createElement("a");
       a.className = "book";
       a.href = `viewer.html?book=${book.key}`;
       a.innerHTML = `
+        ${i === 0 && book.updatedAt ? '<span class="book-badge">Latest update</span>' : ""}
         <div class="book-placeholder">Loading…</div>
         <img class="book-thumb loading" alt="${book.title} cover">
         <div class="book-scrim"></div>
         <div class="book-info">
           <p class="book-title">${book.title}</p>
           <p class="book-meta">${book.meta}</p>
+          ${book.updatedAt ? `<p class="book-updated">Last update: ${timeAgo(book.updatedAt)}</p>` : ""}
         </div>
       `;
       grid.appendChild(a);
